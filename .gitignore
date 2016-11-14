@@ -1,0 +1,12 @@
+.erlang.mk/
+cover/
+deps/
+ebin/
+logs/
+test/*.beam
+test/ct.cover.spec
+.css.plt
+ct.coverdata
+eunit.coverdata
+css.config
+css.d
