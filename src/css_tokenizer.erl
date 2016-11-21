@@ -19,20 +19,23 @@
 
 -type css_token() :: atom() | tuple().
 
--spec consume(Input::binary(), Num_Tokens::pos_integer()) -> {Tokens::list(), Remaining::binary()}.
+-spec consume(Input::binary(), Num_Tokens::non_neg_integer()) -> {Tokens::list(), Remaining::binary()}.
 consume(Input, N) ->
   consume(Input, N, []).
 
--spec consume(Input::binary(), Num_Tokens::pos_integer(), Acc::list()) -> {Tokens::list(), Remaining::binary()}.
-consume(Input, 1, Acc) ->
-  {Tok, Rem} = consume_token(Input),
-  {lists:reverse([Tok | Acc]), Rem};
+-spec consume(Input::binary(), Num_Tokens::non_neg_integer(), Acc::list()) -> {Tokens::list(), Remaining::binary()}.
+consume(Input, 0, Acc) ->
+  {lists:reverse(Acc), Input};
 consume(Input, N, Acc) ->
-  {Tok, Rem} = consume_token(Input),
-  consume(Rem, N - 1, [Tok | Acc]).
+  case consume_token(Input) of
+    {Tok, Rem} ->
+      consume(Rem, N - 1, [Tok | Acc]);
+    eof ->
+      consume(Input, 0, Acc)
+  end.
 
--spec consume_token(Input::binary()) -> {Token::css_token(), Remaining::binary()}.
-consume_token(<<>>) -> {eof, <<>>};
+-spec consume_token(Input::binary()) -> {Token::css_token(), Remaining::binary()} | eof.
+consume_token(<<>>) -> eof;
 
 consume_token(<<C/utf8, Rem/binary>>) when ?is_quot(C) -> consume_string(C, Rem, <<>>);
 
