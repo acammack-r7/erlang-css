@@ -237,7 +237,7 @@ consume_digits(Rem, <<>>) ->
 consume_digits(Rem, String) ->
   {binary_to_integer(String), String, Rem}.
 
--spec compute_number({-1 | 1, non_neg_integer(), float(), {-1 | 1, non_neg_integer()}}) -> float().
+-spec compute_number({-1 | 1, non_neg_integer(), non_neg_integer(), {-1 | 1, non_neg_integer()}}) -> float().
 compute_number({Sign, Integer, Fraction, {E_Sign, Exponent}}) ->
   Sign * (Integer + make_fraction(Fraction)) * math:pow(10, E_Sign * Exponent).
 
