@@ -31,7 +31,7 @@ consume(Input, N, Acc) ->
     {Tok, Rem} ->
       consume(Rem, N - 1, [Tok | Acc]);
     eof ->
-      consume(Input, 0, Acc)
+      consume(<<>>, 0, Acc)
   end.
 
 -spec consume_token(Input::binary()) -> {Token::css_token(), Remaining::binary()} | eof.
