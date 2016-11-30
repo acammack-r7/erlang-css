@@ -160,13 +160,13 @@ count_n_xs(Rem, _X, Xs, _N) -> {Xs, Rem}.
 -spec consume_unicode_range(Input::binary()) -> {{unicode_range, non_neg_integer(), non_neg_integer()}, binary()}.
 consume_unicode_range(Input) ->
   case consume_n_hex(Input, <<>>, 6) of
-    {Digits, <<$?, Rem/binary>>} when byte_size(Digits) < 6 ->
+    {Digits, <<$?, _/binary>> = Rem} when byte_size(Digits) < 6 ->
       {Qs, Rem2} = count_n_xs(Rem, $?, 0, 6 - byte_size(Digits)),
       Start = binary_to_integer(<<Digits/binary, (binary:copy(<<$0>>, Qs))/binary>>, 16),
       End = binary_to_integer(<<Digits/binary, (binary:copy(<<$F>>, Qs))/binary>>, 16),
       {{unicode_range, Start, End}, Rem2};
     {Start, <<$-, C/utf8, Rem/binary>>} when ?is_hex(C) ->
-      {End, Rem2} = consume_n_hex(Rem, <<>>, 6),
+      {End, Rem2} = consume_n_hex(<<C/utf8, Rem/binary>>, <<>>, 6),
       {{unicode_range, binary_to_integer(Start, 16), binary_to_integer(End, 16)}, Rem2};
     {Digits, Rem} ->
       {{unicode_range, binary_to_integer(Digits, 16), binary_to_integer(Digits, 16)}, Rem}
