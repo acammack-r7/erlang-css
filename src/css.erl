@@ -1,7 +1,7 @@
 -module(css).
 
 -export([parse/1, parse_inline_style/1]).
--export([serialize/1, serialize_inline_style/1]).
+-export([serialize/1]).
 
 -spec parse(Input::binary()) -> Rules::list().
 parse(Input) when is_binary(Input) ->
@@ -15,8 +15,4 @@ parse_inline_style(Input) when is_binary(Input) ->
 
 -spec serialize(Input::list()) -> Declarations::binary().
 serialize(Input) when is_list(Input) ->
-  css_serializer:serialize_rules(Input).
-
--spec serialize_inline_style(Input::list()) -> Declarations::binary().
-serialize_inline_style(Input) ->
-  css_serializer:serialize_declarations(Input).
+  css_serializer:serialize(Input).
