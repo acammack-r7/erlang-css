@@ -2,6 +2,8 @@
 
 -export([serialize/1]).
 
+-include("characters.hrl").
+
 -spec serialize(Input) -> CSS::binary() when Input::list() | atom() | tuple().
 serialize(Input) when is_list(Input) ->
     << <<(serialize(Single))/binary, " ">> || Single <- Input >>;
@@ -58,6 +60,9 @@ css_escape(Unescaped) ->
   << <<(css_escape_char(Char))/binary>> || <<Char/utf8>> <= Unescaped >>.
 
 -spec css_escape_char(Character::integer()) -> Escaped::binary().
+% Characters that always start an identifier never have to be escaped
+css_escape_char(Char) when ?name_start(Char) ->
+  <<Char/utf8>>;
 css_escape_char(Char) ->
   <<$\\, (integer_to_binary(Char, 16))/binary, 32>>.
 
