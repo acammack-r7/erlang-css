@@ -2,39 +2,31 @@
 
 -export([serialize/1]).
 
--spec serialize(Input) -> CSS::binary() when Input::list() | atom() | tuple(). 
+-spec serialize(Input) -> CSS::binary() when Input::list() | atom() | tuple().
 serialize(Input) when is_list(Input) ->
-  lists:foldl(fun(Single, Full) ->
-    <<Full/binary, (serialize(Single))/binary>>
-  end, <<>>, Input);
+    << <<(serialize(Single))/binary, " ">> || Single <- Input >>;
 serialize({rule, Selector, Prop}) ->
   <<(serialize(Selector))/binary, ${, (serialize(Prop))/binary, $}>>;
 serialize({at_rule, Name, Selector, Prop}) ->
-  <<$@, Name/binary, " ", (serialize(Selector))/binary, (serialize(Prop))/binary>>;
+  <<$@, (css_escape(Name))/binary, " ", (serialize(Selector))/binary, (serialize(Prop))/binary>>;
 serialize({{decl, important}, Prop, Val}) ->
-  Value = lists:foldl(fun(Single, Full) ->
-      <<Full/binary, (serialize(Single))/binary>>
-    end, <<>>, Val),
-  <<Prop/binary, $:, Value/binary, " !important;">>;
+  <<(css_escape(Prop))/binary, $:, (serialize(Val))/binary, " !important;">>;
 serialize({{decl, _Important}, Prop, Val}) ->
-  Value = lists:foldl(fun(Single, Full) ->
-      <<Full/binary, (serialize(Single))/binary>>
-    end, <<>>, Val),
-  <<Prop/binary, $:, Value/binary, $;>>;
+  <<(css_escape(Prop))/binary, $:, (serialize(Val))/binary, $;>>;
 serialize(Token) when is_tuple(Token) ->
   case Token of
-    {ident, Ident} -> <<(css_escape_all(Ident))/binary, " ">>;
-    {string, Ident} -> <<$",(css_escape_all(Ident))/binary, $", " ">>;
-    {function, Ident} -> <<(css_escape_all(Ident))/binary, $(, " ">>;
-    {function, Ident, Props} -> <<(css_escape_all(Ident))/binary, $(, (serialize(Props))/binary, $), " ">>;
-    {url, Ident} -> <<"url(", (css_escape_all(Ident))/binary, $), " ">>;
-    {{hash, id}, Ident} -> <<$#, (css_escape_all(Ident))/binary, " ">>;
-    {{hash, unrestricted}, Ident} -> <<$#, (binary:replace(Ident, <<"\t">>, <<"\\\t">>))/binary, " ">>;
-    {{dimension, integer}, {_, Number, Ident}} -> <<Number/binary, (css_escape_all(Ident))/binary, " ">>;
-    {{dimension, number}, {_, Number, Ident}} -> <<Number/binary, (css_escape_all(Ident))/binary, " ">>;
-    {{number, integer}, {_, Number}} -> <<Number/binary, " ">>;
-    {{number, number}, {_, Number}} -> <<Number/binary, " ">>;
-    {delim, Ident} -> <<Ident, " ">>;
+    {ident, Ident} -> <<(css_escape(Ident))/binary>>;
+    {string, Ident} -> <<$",(css_escape(Ident))/binary, $">>;
+    {function, Ident} -> <<(css_escape(Ident))/binary, $(>>;
+    {function, Ident, Props} -> <<(css_escape(Ident))/binary, $(, (serialize(Props))/binary, $)>>;
+    {url, Ident} -> <<"url(", (css_escape(Ident))/binary, $)>>;
+    {{hash, id}, Ident} -> <<$#, (css_escape(Ident))/binary>>;
+    {{hash, unrestricted}, Ident} -> <<$#, (css_escape(Ident))/binary>>;
+    {{dimension, integer}, {_, Number, Ident}} -> <<Number/binary, (css_escape(Ident))/binary>>;
+    {{dimension, number}, {_, Number, Ident}} -> <<Number/binary, (css_escape(Ident))/binary>>;
+    {{number, integer}, {_, Number}} -> <<Number/binary>>;
+    {{number, number}, {_, Number}} -> <<Number/binary>>;
+    {delim, Ident} -> <<Ident>>;
     {{block, '{'}, Ident} -> <<${, (serialize(Ident))/binary, $}>>;
     {{block, '['}, Ident} -> <<$[, (serialize(Ident))/binary, $]>>;
     {{block, '('}, Ident} -> <<$(, (serialize(Ident))/binary, $)>>;
@@ -59,16 +51,14 @@ serialize(Token) when is_atom(Token) ->
     '~=' -> <<"~=">>;
     '|=' -> <<"|=">>;
     '||' -> <<"||">>
-  end;
-serialize([]) ->
-  <<$;>>.
+  end.
 
--spec css_escape_all(Input::binary()) -> Declarations::binary().
-css_escape_all(Unescaped) ->
-  << <<(css_escape(Char))/binary>> || <<Char/utf8>> <= Unescaped >>.
+-spec css_escape(Name::binary()) -> Escaped::binary().
+css_escape(Unescaped) ->
+  << <<(css_escape_char(Char))/binary>> || <<Char/utf8>> <= Unescaped >>.
 
--spec css_escape(Input::binary()) -> Declarations::binary().
-css_escape(Char) ->
+-spec css_escape_char(Character::integer()) -> Escaped::binary().
+css_escape_char(Char) ->
   <<$\\, (integer_to_binary(Char, 16))/binary, 32>>.
 
 -spec serialize_unicode_range(Input::integer(), Input::integer()) -> Declaraions::binary().
