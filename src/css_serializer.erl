@@ -18,20 +18,17 @@ serialize({{decl, _Important}, Prop, Val}) ->
 serialize(Token) when is_tuple(Token) ->
   case Token of
     {ident, Ident} -> <<(css_escape(Ident))/binary>>;
-    {string, Ident} -> <<$",(css_escape(Ident))/binary, $">>;
+    {string, String} -> <<$",(css_escape(String))/binary, $">>;
     {function, Ident} -> <<(css_escape(Ident))/binary, $(>>;
-    {function, Ident, Props} -> <<(css_escape(Ident))/binary, $(, (serialize(Props))/binary, $)>>;
-    {url, Ident} -> <<"url(", (css_escape(Ident))/binary, $)>>;
-    {{hash, id}, Ident} -> <<$#, (css_escape(Ident))/binary>>;
-    {{hash, unrestricted}, Ident} -> <<$#, (css_escape(Ident))/binary>>;
-    {{dimension, integer}, {_, Number, Ident}} -> <<Number/binary, (css_escape(Ident))/binary>>;
-    {{dimension, number}, {_, Number, Ident}} -> <<Number/binary, (css_escape(Ident))/binary>>;
-    {{number, integer}, {_, Number}} -> <<Number/binary>>;
-    {{number, number}, {_, Number}} -> <<Number/binary>>;
-    {delim, Ident} -> <<Ident>>;
-    {{block, '{'}, Ident} -> <<${, (serialize(Ident))/binary, $}>>;
-    {{block, '['}, Ident} -> <<$[, (serialize(Ident))/binary, $]>>;
-    {{block, '('}, Ident} -> <<$(, (serialize(Ident))/binary, $)>>;
+    {function, Ident, Body} -> <<(css_escape(Ident))/binary, $(, (serialize(Body))/binary, $)>>;
+    {url, URL} -> <<"url(", (css_escape(URL))/binary, $)>>;
+    {{hash, _ID}, Ident} -> <<$#, (css_escape(Ident))/binary>>;
+    {{dimension, _Integer}, {_, Number, Ident}} -> <<Number/binary, (css_escape(Ident))/binary>>;
+    {{number, _Integer}, {_, Number}} -> <<Number/binary>>;
+    {delim, Char} -> <<Char/utf8>>;
+    {{block, '{'}, Body} -> <<${, (serialize(Body))/binary, $}>>;
+    {{block, '['}, Body} -> <<$[, (serialize(Body))/binary, $]>>;
+    {{block, '('}, Body} -> <<$(, (serialize(Body))/binary, $)>>;
     {unicode_range, Start, End} -> <<(serialize_unicode_range(Start, End))/binary>>;
     {'%', {_, Number}} -> <<Number/binary, $%>>;
     {'@', Ident} -> <<$@, Ident/binary>>
