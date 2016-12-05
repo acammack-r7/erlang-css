@@ -63,7 +63,7 @@ css_escape_char(Char) when ?name_start(Char) ->
 css_escape_char(Char) ->
   <<$\\, (integer_to_binary(Char, 16))/binary, 32>>.
 
--spec serialize_unicode_range(Input::integer(), Input::integer()) -> Declaraions::binary().
+-spec serialize_unicode_range(Begin::integer(), End::integer()) -> Range::binary().
 serialize_unicode_range(Start, Start) ->
   <<$U, $+, (integer_to_binary(Start, 16))/binary>>;
 serialize_unicode_range(Start, End) ->
