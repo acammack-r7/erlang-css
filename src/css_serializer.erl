@@ -9,6 +9,8 @@ serialize(Input) when is_list(Input) ->
     << <<(serialize(Single))/binary, " ">> || Single <- Input >>;
 serialize({rule, Selector, Prop}) ->
   <<(serialize(Selector))/binary, ${, (serialize(Prop))/binary, $}>>;
+serialize({at_rule, Name, Selector, []}) ->
+  <<$@, (css_escape(Name))/binary, " ", (serialize(Selector))/binary, $;>>;
 serialize({at_rule, Name, Selector, Prop}) ->
   <<$@, (css_escape(Name))/binary, " ", (serialize(Selector))/binary, (serialize(Prop))/binary>>;
 serialize({{decl, important}, Prop, Val}) ->
