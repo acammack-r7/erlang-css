@@ -55,7 +55,11 @@ serialize(Token) when is_atom(Token) ->
     '^=' -> <<"^=">>;
     '~=' -> <<"~=">>;
     '|=' -> <<"|=">>;
-    '||' -> <<"||">>
+    '||' -> <<"||">>;
+    '<!--' -> <<"<!--">>;
+    '-->' -> <<"-->">>;
+    bad_string -> <<$", $">>;
+    bad_url -> <<"url()">>
   end.
 
 -spec css_escape(Name::binary()) -> Escaped::binary().
