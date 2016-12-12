@@ -4,9 +4,12 @@
 
 -include("characters.hrl").
 
--spec serialize(Input) -> CSS::binary() when Input::list() | atom() | tuple().
-serialize(Input) when is_list(Input) ->
-    << <<(serialize(Single))/binary, " ">> || Single <- Input >>;
+-spec serialize(Input) -> CSS::binary() when Input::atom() | tuple() | list().
+serialize([]) -> <<>>;
+serialize([Single]) ->
+  serialize(Single);
+serialize([Single, Next | Rest]) ->
+  <<(serialize(Single))/binary, (space(Single, Next))/binary, (serialize([Next | Rest]))/binary>>;
 serialize({rule, Selector, Prop}) ->
   <<(serialize(Selector))/binary, ${, (serialize(Prop))/binary, $}>>;
 serialize({at_rule, Name, Selector, []}) ->
@@ -79,3 +82,135 @@ serialize_unicode_range(Start, Start) ->
   <<$U, $+, (integer_to_binary(Start, 16))/binary>>;
 serialize_unicode_range(Start, End) ->
   <<$U, $+, (integer_to_binary(Start, 16))/binary, $-, (integer_to_binary(End, 16))/binary>>.
+
+-spec space(atom() | tuple(), atom() | tuple()) -> binary().
+space({ident, _}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    Next =:= {delim, $-};
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range;
+    Next =:= '-->';
+    Next =:= '(';
+    element(1, Next) =:= {block, '('}
+    -> <<" ">>;
+
+space({'@', _}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    Next =:= {delim, $-};
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range;
+    Next =:= '-->'
+    -> <<" ">>;
+
+space({{hash, _}, _}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    Next =:= {delim, $-};
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range;
+    Next =:= '-->'
+    -> <<" ">>;
+
+space({{dimension, _}, _}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    Next =:= {delim, $-};
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range;
+    Next =:= '-->'
+    -> <<" ">>;
+
+space({delim, $#}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    Next =:= {delim, $-};
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range
+    -> <<" ">>;
+
+space({delim, $-}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range
+    -> <<" ">>;
+
+space({{number, _}, _}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    element(1, Next) =:= unicode_range
+    -> <<" ">>;
+
+space({delim, $@}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, Next) =:= url;
+    Next =:= bad_url;
+    Next =:= {delim, $-};
+    element(1, Next) =:= unicode_range
+    -> <<" ">>;
+
+space({unicode_range, _, _}, Next) when
+    element(1, Next) =:= ident;
+    element(1, Next) =:= function;
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%';
+    Next =:= '-->';
+    Next =:= {delim, $?}
+    -> <<" ">>;
+
+space({delim, $.}, Next) when
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%'
+    -> <<" ">>;
+
+space({delim, $+}, Next) when
+    element(1, element(1, Next)) =:= number;
+    element(1, element(1, Next)) =:= dimension;
+    element(1, Next) =:= '%'
+    -> <<" ">>;
+
+space({delim, $$}, {delim, $=}) -> <<" ">>;
+space({delim, $*}, {delim, $=}) -> <<" ">>;
+space({delim, $^}, {delim, $=}) -> <<" ">>;
+space({delim, $~}, {delim, $=}) -> <<" ">>;
+space({delim, $|}, {delim, $=}) -> <<" ">>;
+space({delim, $|}, {delim, $|}) -> <<" ">>;
+space({delim, $/}, {delim, $*}) -> <<" ">>;
+
+space({delim, $\\}, _) -> <<"\n">>;
+
+space(_, _) -> <<>>.
