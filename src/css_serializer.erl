@@ -31,6 +31,8 @@ serialize(Token) when is_tuple(Token) ->
     {{hash, unrestricted}, Val} -> <<$#, (css_escape(Val, unrestricted))/binary>>;
     {{dimension, _Integer}, {_, Number, Ident}} -> <<Number/binary, (css_escape(Ident))/binary>>;
     {{number, _Integer}, {_, Number}} -> <<Number/binary>>;
+    {'an+b', A, B} when B >= 0 -> <<(integer_to_binary(A))/binary, "n+", (integer_to_binary(B))/binary>>;
+    {'an+b', A, B} -> <<(integer_to_binary(A))/binary, $n, (integer_to_binary(B))/binary>>;
     {delim, Char} -> <<Char/utf8>>;
     {{block, '{'}, Body} -> <<${, (serialize(Body))/binary, $}>>;
     {{block, '['}, Body} -> <<$[, (serialize(Body))/binary, $]>>;
