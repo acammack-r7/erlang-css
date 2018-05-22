@@ -6,6 +6,8 @@
 
 -spec serialize(Input) -> CSS::binary() when Input::atom() | tuple() | list().
 serialize([]) -> <<>>;
+serialize([ws | Rest]) ->
+  <<" ", (serialize(Rest))/binary>>;
 serialize([Single]) ->
   serialize(Single);
 serialize([Single, Next | Rest]) ->

@@ -40,9 +40,11 @@ parse_rule(Toks, {Prelude, Block}) ->
   parse_rule(Rem, {[Tok | Prelude], Block}).
 
 parse_declarations({{block, '{'}, Tokens}) when is_list(Tokens) ->
-  lists:reverse(parse_declarations(Tokens, []));
+  Ws_Removed = [ Tok || Tok <- Tokens, Tok =/= ws ],
+  lists:reverse(parse_declarations(Ws_Removed, []));
 parse_declarations(Tokens) when is_list(Tokens) ->
-  lists:reverse(parse_declarations(Tokens, [])).
+  Ws_Removed = [ Tok || Tok <- Tokens, Tok =/= ws ],
+  lists:reverse(parse_declarations(Ws_Removed, [])).
 
 parse_declarations([], Decls) -> Decls;
 parse_declarations([';' | Tokens], Decls) -> parse_declarations(Tokens, Decls);

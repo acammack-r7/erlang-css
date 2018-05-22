@@ -63,8 +63,8 @@ consume_token(<<C/utf8, _Rem/binary>> = B) when ?name_start(C) -> consume_identi
 consume_token(<<C/utf8, _Rem/binary>> = B) when ?is_digit(C) -> consume_number(B);
 % XXX Ignores whitespace. This goes against the spec, but a parser that does
 % this is indistinguishable from one that doesn't.
-% consume_token(<<C/utf8, Rem/binary>>) when ?is_ws(C) -> {ws, skip_ws(Rem)};
-consume_token(<<C/utf8, Rem/binary>>) when ?is_ws(C) -> consume_token(skip_ws(Rem));
+consume_token(<<C/utf8, Rem/binary>>) when ?is_ws(C) -> {ws, skip_ws(Rem)};
+% consume_token(<<C/utf8, Rem/binary>>) when ?is_ws(C) -> consume_token(skip_ws(Rem));
 
 consume_token(<<C/utf8, Rem/binary>> = B) when C =:= $+ orelse C =:= $. ->
   case start_number(B) of
